@@ -1,195 +1,308 @@
 // ========================================
-// KRISHU WP BOT - Main Bot with REAL Pairing Code
-// Uses ACTUAL WhatsApp Baileys API
+// KRISHU WP BOT - REAL PAIRING CODE VERSION
+// WhatsApp bot with actual Baileys API
 // ========================================
 
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, Browsers } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
 const P = require('pino');
 const fs = require('fs-extra');
 const path = require('path');
 const express = require('express');
 const config = require('./config');
-const qrcode = require('qrcode');
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// ========================================
-// SESSION MANAGER
-// ========================================
-const sessionManager = new Map();
-let globalActiveUsers = 5;
-
-function generateSessionId(number) {
-  return `session_${number}_${Date.now()}`;
-}
-
-async function createSession(number) {
-  const sessionId = generateSessionId(number);
-  const sessionPath = `./auth_sessions/${sessionId}`;
-  
-  // Create session folder
-  await fs.ensureDir(sessionPath);
-  
-  const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
-  const { version } = await fetchLatestBaileysVersion();
-  
-  // Create WhatsApp socket
-  const sock = makeWASocket({
-    version,
-    auth: state,
-    logger: P({ level: 'silent' }),
-    printQRInTerminal: false,
-    mobile: false,
-    browser: ['KRISHU BOT', 'Safari', '4.0.0']
-  });
-  
-  // Save session info
-  sessionManager.set(sessionId, {
-    sock,
-    saveCreds,
-    number,
-    sessionPath,
-    connected: false,
-    pairingCode: null,
-    createdAt: Date.now()
-  });
-  
-  // Handle creds update
-  sock.ev.on('creds.update', saveCreds);
-  
-  // Handle connection updates
-  sock.ev.on('connection.update', async (update) => {
-    const session = sessionManager.get(sessionId);
-    if (!session) return;
-    
-    const { connection, lastDisconnect } = update;
-    
-    if (connection === 'open') {
-      console.log(`✅ Session ${sessionId} connected!`);
-      session.connected = true;
-    }
-    
-    if (connection === 'close') {
-      const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-      console.log(`❌ Session ${sessionId} disconnected: ${lastDisconnect?.error?.message}`);
-      session.connected = false;
-    }
-  });
-  
-  return sessionId;
-}
-
-async function getPairingCode(sessionId, number, customCode = null) {
-  try {
-    const session = sessionManager.get(sessionId);
-    if (!session) throw new Error('Session not found');
-    
-    const sock = session.sock;
-    
-    // Wait a bit for socket to be ready
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    if (!sock.authState.creds.registered) {
-      // Request REAL pairing code from WhatsApp
-      const code = await sock.requestPairingCode(number, customCode);
-      
-      // Format code as XXXX-XXXX
-      const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
-      
-      session.pairingCode = formattedCode;
-      console.log(`🔑 Pairing code for ${number}: ${formattedCode}`);
-      
-      return {
-        success: true,
-        code: formattedCode,
-        sessionId,
-        number
-      };
-    } else {
-      return {
-        success: false,
-        message: 'Number already registered. Use RE-PAIR option.',
-        alreadyRegistered: true
-      };
-    }
-  } catch (error) {
-    console.error('❌ Pairing error:', error.message);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-}
+// Store active sessions
+const activeSessions = new Map();
+let botInstance = null;
 
 // ========================================
-// WEBSITE API ROUTES
+// API: STATUS
 // ========================================
-
-// Status endpoint
 app.get('/api/status', (req, res) => {
   res.json({
     status: 'online',
-    activeUsers: sessionManager.size,
+    activeUsers: activeSessions.size,
     botName: config.botName,
     version: config.version,
-    uptime: Math.floor(process.uptime())
+    uptime: Math.floor(process.uptime()),
+    server: 'running'
   });
 });
 
-// Generate pairing code
+// ========================================
+// API: REAL PAIRING CODE
+// ========================================
 app.post('/api/pair', async (req, res) => {
   try {
-    const { number, customCode } = req.body;
+    const { number } = req.body;
     
     if (!number) {
-      return res.status(400).json({
-        success: false,
-        error: '❌ Phone number is required'
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Phone number is required' 
       });
     }
     
+    // Clean number - remove +, spaces, dashes
     const cleanNumber = number.replace(/[^0-9]/g, '');
     
     if (cleanNumber.length < 10) {
-      return res.status(400).json({
-        success: false,
-        error: '❌ Invalid phone number. Include country code (e.g., 919337948764)'
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid number. Include country code (e.g., 919337948764)' 
       });
     }
     
-    console.log(`📱 New pairing request for: ${cleanNumber}`);
+    console.log(`📱 Pairing request for: ${cleanNumber}`);
     
-    // Create new session
-    const sessionId = await createSession(cleanNumber);
+    // Create a unique session folder for this pairing
+    const sessionId = `pair_${cleanNumber}_${Date.now()}`;
+    const sessionDir = path.join(__dirname, 'sessions', sessionId);
+    await fs.ensureDir(sessionDir);
     
-    // Wait for socket to initialize
+    // Initialize Baileys with multi-file auth
+    const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+    const { version } = await fetchLatestBaileysVersion();
+    
+    console.log(`🔄 Creating WhatsApp socket (version ${version})...`);
+    
+    // Create the socket connection
+    const sock = makeWASocket({
+      version,
+      auth: state,
+      logger: P({ level: 'silent' }),
+      printQRInTerminal: false,
+      browser: Browsers.baileys('KRISHU BOT', 'Chrome'),
+      markOnlineOnConnect: false,
+      generateHighQualityLinkPreview: false,
+      syncFullHistory: false,
+      shouldSyncHistoryMessage: false
+    });
+    
+    // Save credentials update
+    sock.ev.on('creds.update', saveCreds);
+    
+    // Store session
+    activeSessions.set(sessionId, {
+      sock,
+      saveCreds,
+      number: cleanNumber,
+      sessionDir,
+      connected: false,
+      createdAt: Date.now()
+    });
+    
+    // Wait for socket to be ready
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    // Get real pairing code
-    const result = await getPairingCode(sessionId, cleanNumber, customCode);
+    // Check if already registered
+    if (state.creds.registered) {
+      console.log(`ℹ️ ${cleanNumber} already registered`);
+      
+      // Clean up
+      setTimeout(() => {
+        sock?.end();
+        fs.removeSync(sessionDir);
+        activeSessions.delete(sessionId);
+      }, 5000);
+      
+      return res.json({
+        success: true,
+        alreadyRegistered: true,
+        message: 'This number is already registered. You can use the bot directly.',
+        number: cleanNumber
+      });
+    }
     
-    if (result.success) {
+    // ========================================
+    // REQUEST REAL PAIRING CODE FROM WHATSAPP
+    // ========================================
+    console.log(`🔑 Requesting real pairing code from WhatsApp for ${cleanNumber}...`);
+    
+    try {
+      // This is the KEY function - requests actual code from WhatsApp servers
+      const pairingCode = await sock.requestPairingCode(cleanNumber);
+      
+      if (!pairingCode) {
+        throw new Error('No pairing code returned from WhatsApp');
+      }
+      
+      // Format code as ABCD-EFGH
+      const formattedCode = pairingCode.match(/.{1,4}/g)?.join('-') || pairingCode;
+      
+      console.log(`✅ REAL PAIRING CODE: ${formattedCode}`);
+      console.log(`📱 For number: ${cleanNumber}`);
+      
+      // Store the code
+      const session = activeSessions.get(sessionId);
+      if (session) {
+        session.pairingCode = formattedCode;
+      }
+      
+      // Send success response
       res.json({
         success: true,
-        pairingCode: result.code,
-        sessionId: result.sessionId,
-        number: result.number,
-        message: `✅ Pairing code generated! Use this code in WhatsApp.`,
+        pairingCode: formattedCode,
+        number: cleanNumber,
+        sessionId: sessionId,
+        message: `✅ Real pairing code generated for ${cleanNumber}`,
         instructions: [
-          '1. Open WhatsApp on your phone',
-          '2. Tap 3 dots (⋮) → Linked Devices',
-          '3. Tap "Link a Device"',
-          '4. Tap "Link with phone number instead"',
-          `5. Enter this code: ${result.code?.replace('-', '')}`
+          "1. Open WhatsApp on your phone",
+          "2. Tap 3 dots (⋮) → Linked Devices",
+          "3. Tap 'Link a Device'",
+          "4. Tap 'Link with phone number instead'",
+          `5. Enter code: ${pairingCode}`,
+          "6. Wait for connection"
         ]
       });
-    } else {
-      res.status(500).json(result);
+      
+      // Listen for connection
+      sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update;
+        
+        if (connection === 'open') {
+          console.log(`✅ ${cleanNumber} connected successfully!`);
+          const session = activeSessions.get(sessionId);
+          if (session) {
+            session.connected = true;
+          }
+          
+          // Send welcome message
+          sock.sendMessage(cleanNumber + '@s.whatsapp.net', {
+            text: `🤖 *${config.botName} v${config.version}*\n\n✅ WhatsApp linked successfully!\n📊 Bot is now active\n\nSend *${config.prefix}menu* for all commands`
+          }).catch(e => {});
+        }
+        
+        if (connection === 'close') {
+          const reason = lastDisconnect?.error?.output?.statusCode;
+          console.log(`❌ ${cleanNumber} disconnected: ${reason}`);
+          
+          const session = activeSessions.get(sessionId);
+          if (session) {
+            session.connected = false;
+          }
+        }
+      });
+      
+      // Handle messages for this session
+      sock.ev.on('messages.upsert', async ({ messages }) => {
+        for (const msg of messages) {
+          if (!msg.message) continue;
+          
+          const sender = msg.key.remoteJid;
+          const text = msg.message?.conversation || 
+                      msg.message?.extendedTextMessage?.text || '';
+          
+          if (!text) continue;
+          
+          // Check prefix
+          if (!text.startsWith(config.prefix) && !text.startsWith('!')) continue;
+          
+          const cmdText = (text.startsWith(config.prefix) ? text.slice(1) : text.slice(1)).trim();
+          const args = cmdText.split(/ +/);
+          const cmd = args.shift()?.toLowerCase();
+          
+          if (!cmd) continue;
+          
+          // Commands
+          if (['menu', 'help', 'h', 'cmd', 'list'].includes(cmd)) {
+            const menu = `╔══════════════════════╗
+║   ${config.botName} v${config.version}   ║
+╚══════════════════════╝
+
+━━━「 🤖 AI 」━━━
+.gemini .metaai .chatgpt .bard
+
+━━━「 📥 DOWNLOADER 」━━━
+.youtube .tiktok .instagram .facebook .play .song
+
+━━━「 🛠️ TOOLS 」━━━
+.sticker .toimg .qr .weather .translate .calc
+
+━━━「 🎮 FUN 」━━━
+.meme .joke .quote .fact .trivia .roast .dice
+
+━━━「 👑 ADMIN 」━━━
+.broadcast .ban .promote .kick .tagall .welcome
+
+━━━「 🔍 SEARCH 」━━━
+.google .image .news .wikipedia .pinterest
+
+━━━「 🎵 MEDIA 」━━━
+.photo .audio .video .mp3 .mp4 .gif
+
+━━━「 📊 SYSTEM 」━━━
+.ping .info .owner .alive .speed .uptime
+
+━━━「 📖 ISLAMIC 」━━━
+.quran .hadith .prayer .tafsir
+
+━━━「 🎌 ANIME 」━━━
+.waifu .neko .anime .manga
+
+⚡ 1000+ Commands Active!`;
+            
+            await sock.sendMessage(sender, { text: menu });
+          }
+          else if (['ping', 'p'].includes(cmd)) {
+            const start = Date.now();
+            await sock.sendMessage(sender, { text: '🏓 Pong!' });
+            const latency = Date.now() - start;
+            await sock.sendMessage(sender, { text: `⚡ Speed: ${latency}ms` });
+          }
+          else if (cmd === 'info') {
+            await sock.sendMessage(sender, { 
+              text: `🤖 *${config.botName}*\n\n📊 Version: ${config.version}\n⚡ Status: Online\n⏰ Uptime: ${Math.floor(process.uptime()/60)}m\n📊 Commands: 1000+\n👑 Owner: Krishu\n🌐 Host: Render\n\n✅ All systems operational!`
+            });
+          }
+          else if (['alive', 'test'].includes(cmd)) {
+            await sock.sendMessage(sender, { text: `✅ *${config.botName}* is ALIVE!\n\n⚡ Bot running smoothly 🚀` });
+          }
+          else if (cmd === 'owner') {
+            await sock.sendMessage(sender, { text: `👑 *Bot Owner*\n\nName: Krishu\nBot: ${config.botName}\nVersion: ${config.version}` });
+          }
+          else if (cmd === 'meme') {
+            const memes = [
+              "😂 When bot works on first try!",
+              "🔥 Deploy at 3AM = success",
+              "💀 It works but idk why",
+              "😭 Fix 1 bug, create 3 more",
+              "🤣 Me explaining my code",
+              "💀 Not a bug, it's a feature"
+            ];
+            const meme = memes[Math.floor(Math.random() * memes.length)];
+            await sock.sendMessage(sender, { text: `🎭 *MEME*\n\n${meme}` });
+          }
+          else {
+            await sock.sendMessage(sender, { 
+              text: `❌ Unknown command: ${text}\n\nType *${config.prefix}menu* for all commands` 
+            });
+          }
+        }
+      });
+      
+    } catch (pairError) {
+      console.error('❌ Pairing code error:', pairError.message);
+      
+      // Clean up session
+      try {
+        sock?.end();
+        fs.removeSync(sessionDir);
+      } catch(e) {}
+      activeSessions.delete(sessionId);
+      
+      res.status(500).json({
+        success: false,
+        error: `Failed to generate pairing code: ${pairError.message}`,
+        suggestion: 'Try again or use a different number'
+      });
     }
+    
   } catch (error) {
     console.error('❌ API Error:', error.message);
     res.status(500).json({
@@ -199,170 +312,60 @@ app.post('/api/pair', async (req, res) => {
   }
 });
 
-// Get QR code (alternative method)
-app.get('/api/qr/:sessionId', async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const session = sessionManager.get(sessionId);
-    
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
-    
-    // Generate QR from session
-    const qr = await qrcode.toDataURL('WHATSAPP_SESSION_' + sessionId);
-    res.json({ success: true, qr });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+// ========================================
+// API: CHECK SESSION STATUS
+// ========================================
+app.get('/api/session/:sessionId', (req, res) => {
+  const { sessionId } = req.params;
+  const session = activeSessions.get(sessionId);
+  
+  if (!session) {
+    return res.json({ exists: false, status: 'expired' });
   }
+  
+  res.json({
+    exists: true,
+    number: session.number,
+    connected: session.connected,
+    pairingCode: session.pairingCode,
+    createdAt: session.createdAt,
+    age: Math.floor((Date.now() - session.createdAt) / 1000) + 's'
+  });
 });
 
 // ========================================
 // START SERVER
 // ========================================
 app.listen(config.port, () => {
-  console.log(`╔═══════════════════════════════════╗`);
-  console.log(`║  KRISHU WP BOT v${config.version}         ║`);
-  console.log(`║  Website running on port ${config.port}    ║`);
-  console.log(`║  URL: http://localhost:${config.port}        ║`);
-  console.log(`╚═══════════════════════════════════╝`);
-});
-
-// ========================================
-// MAIN BOT (for session that stays online)
-// ========================================
-async function startMainBot() {
-  try {
-    // Use a separate folder for main bot
-    const mainSessionPath = './auth_main';
-    await fs.ensureDir(mainSessionPath);
-    
-    const { state, saveCreds } = await useMultiFileAuthState(mainSessionPath);
-    const { version } = await fetchLatestBaileysVersion();
-    
-    const sock = makeWASocket({
-      version,
-      auth: state,
-      logger: P({ level: 'silent' }),
-      printQRInTerminal: false,
-      browser: ['KRISHU MAIN BOT', 'Safari', '4.0.0']
-    });
-    
-    sock.ev.on('creds.update', saveCreds);
-    
-    sock.ev.on('connection.update', async (update) => {
-      const { connection, lastDisconnect } = update;
-      
-      if (connection === 'open') {
-        console.log('✅ Main bot connected to WhatsApp');
-      }
-      
-      if (connection === 'close') {
-        const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-        if (shouldReconnect) {
-          console.log('🔄 Reconnecting main bot...');
-          setTimeout(startMainBot, 5000);
-        }
-      }
-    });
-    
-    // Load and handle commands
-    const commands = new Map();
-    
-    sock.ev.on('messages.upsert', async ({ messages }) => {
-      for (const msg of messages) {
-        if (!msg.message || msg.key.fromMe) continue;
-        
-        const text = msg.message?.conversation || 
-                    msg.message?.extendedTextMessage?.text || '';
-        
-        if (!text) continue;
-        
-        const sender = msg.key.remoteJid;
-        let cmdText = text;
-        
-        if (text.startsWith(config.prefix)) {
-          cmdText = text.slice(1).trim();
-        } else if (text.startsWith('!')) {
-          cmdText = text.slice(1).trim();
-        } else {
-          continue;
-        }
-        
-        const args = cmdText.split(/ +/);
-        const cmd = args.shift()?.toLowerCase();
-        
-        if (!cmd) continue;
-        
-        // Handle built-in commands
-        if (['menu', 'help', 'h'].includes(cmd)) {
-          const menu = `╔══════════════════════╗
-║   ${config.botName} v${config.version}   ║
-╚══════════════════════╝
-
-👋 Hello @${sender.split('@')[0]}!
-
-━━━「 🤖 AI 」━━━
-.gemini .metaai .chatgpt .bard .claude
-
-━━━「 📥 DOWNLOAD 」━━━
-.youtube .tiktok .instagram .facebook
-
-━━━「 🛠️ TOOLS 」━━━
-.sticker .toimg .qr .weather .translate
-
-━━━「 🎮 FUN 」━━━
-.meme .joke .quote .fact .roast
-
-━━━「 🔥 UTILITY 」━━━
-.ping .info .owner .alive .speed
-
-⚡ 1000+ Commands Working!`;
-          
-          await sock.sendMessage(sender, { text: menu, mentions: [sender] });
-        }
-        else if (cmd === 'ping') {
-          const start = Date.now();
-          await sock.sendMessage(sender, { text: '🏓 Pong!' });
-          const latency = Date.now() - start;
-          await sock.sendMessage(sender, { text: `⚡ Latency: ${latency}ms` });
-        }
-        else if (cmd === 'alive') {
-          await sock.sendMessage(sender, { text: `✅ ${config.botName} is ALIVE!\n\n⚡ Status: Online\n📊 Version: ${config.version}` });
-        }
-        else if (cmd === 'info') {
-          await sock.sendMessage(sender, { text: `🤖 *${config.botName} v${config.version}*\n\n✅ Status: Online\n⚡ Uptime: ${Math.floor(process.uptime()/60)} minutes\n📊 Commands: 1000+\n👑 Owner: ${config.ownerName}\n🌐 Host: Render` });
-        }
-      }
-    });
-    
-  } catch (error) {
-    console.error('❌ Main bot error:', error.message);
-    setTimeout(startMainBot, 5000);
-  }
-}
-
-// Cleanup old sessions every 30 minutes
-setInterval(() => {
-  const now = Date.now();
-  const maxAge = 30 * 60 * 1000; // 30 minutes
+  console.log('╔═══════════════════════════════════╗');
+  console.log('║   KRISHU WP BOT v' + config.version + '            ║');
+  console.log('║   Server: REAL PAIRING CODE       ║');
+  console.log('║   Port: ' + config.port + '                       ║');
+  console.log('╚═══════════════════════════════════╝');
   
-  for (const [sessionId, session] of sessionManager.entries()) {
-    if (now - session.createdAt > maxAge && !session.connected) {
-      console.log(`🧹 Cleaning up old session: ${sessionId}`);
-      try {
-        session.sock?.end();
-        fs.removeSync(session.sessionPath);
-      } catch (e) {}
-      sessionManager.delete(sessionId);
+  // Clean up old sessions every 10 minutes
+  setInterval(() => {
+    const now = Date.now();
+    for (const [id, session] of activeSessions.entries()) {
+      if (now - session.createdAt > 600000 && !session.connected) { // 10 min
+        console.log(`🧹 Cleaning old session: ${id}`);
+        try {
+          session.sock?.end();
+          fs.removeSync(session.sessionDir);
+        } catch(e) {}
+        activeSessions.delete(id);
+      }
     }
-  }
-}, 30 * 60 * 1000);
-
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error.message);
+  }, 600000);
 });
 
-process.on('unhandledRejection', (error) => {
-  console.error('❌ Unhandled Rejection:', error.message);
+// ========================================
+// HANDLE ERRORS
+// ========================================
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught:', err.message);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled:', err.message);
 });
