@@ -6,48 +6,23 @@
     <title>KRISHU WP BOT - Best Mini Bot</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
             color: #fff;
-            overflow-x: hidden;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            text-align: center;
-            padding: 40px 0;
-        }
-        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; padding: 40px 0; }
         .logo {
             font-size: 3.5rem;
             font-weight: 900;
             background: linear-gradient(45deg, #00ff88, #00ccff, #ff00ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 0 30px rgba(0,255,136,0.3);
         }
-        
-        .subtitle {
-            color: #aaa;
-            font-size: 1.2rem;
-            margin-top: 10px;
-            letter-spacing: 2px;
-        }
-        
+        .subtitle { color: #aaa; font-size: 1.2rem; margin-top: 10px; }
         .badge {
             display: inline-block;
             background: rgba(0,255,136,0.15);
@@ -58,96 +33,48 @@
             font-size: 0.8rem;
             margin-top: 10px;
         }
-        
         .server-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin: 30px 0;
         }
-        
-        @media (max-width: 768px) {
-            .server-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
+        @media (max-width: 768px) { .server-grid { grid-template-columns: 1fr; } }
         .server-card {
             background: rgba(255,255,255,0.05);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 20px;
             padding: 25px;
-            transition: all 0.3s ease;
         }
-        
-        .server-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        
-        .server-card.active {
-            border-color: #00ff88;
-            box-shadow: 0 0 30px rgba(0,255,136,0.1);
-        }
-        
+        .server-card.active { border-color: #00ff88; }
         .server-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
-        
-        .server-name {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-        
-        .server-status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-        
-        .status-online {
-            background: rgba(0,255,136,0.2);
-            color: #00ff88;
-        }
-        
-        .status-maintenance {
-            background: rgba(255,165,0,0.2);
-            color: #ffa500;
-        }
-        
+        .server-name { font-size: 1.2rem; font-weight: 700; }
+        .server-status { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; }
+        .status-online { background: rgba(0,255,136,0.2); color: #00ff88; }
+        .status-maintenance { background: rgba(255,165,0,0.2); color: #ffa500; }
         .server-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
-        
         .stat-item {
             background: rgba(255,255,255,0.03);
             padding: 15px;
             border-radius: 12px;
             text-align: center;
         }
-        
-        .stat-label {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 5px;
-        }
-        
-        .stat-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-        
+        .stat-label { font-size: 0.8rem; color: #888; margin-bottom: 5px; }
+        .stat-value { font-size: 1.4rem; font-weight: 700; }
         .stat-value.green { color: #00ff88; }
         .stat-value.blue { color: #00ccff; }
         .stat-value.purple { color: #b388ff; }
         .stat-value.gold { color: #ffd700; }
-        
         .pairing-section {
             background: rgba(255,255,255,0.05);
             backdrop-filter: blur(20px);
@@ -156,20 +83,13 @@
             padding: 30px;
             margin: 30px 0;
         }
-        
-        .pairing-title {
-            text-align: center;
-            font-size: 1.5rem;
-            margin-bottom: 25px;
-        }
-        
+        .pairing-title { text-align: center; font-size: 1.5rem; margin-bottom: 25px; }
         .input-group {
             display: flex;
             gap: 10px;
             max-width: 500px;
             margin: 0 auto;
         }
-        
         .input-group input {
             flex: 1;
             padding: 15px 20px;
@@ -179,18 +99,9 @@
             color: #fff;
             font-size: 1.1rem;
             outline: none;
-            transition: all 0.3s;
         }
-        
-        .input-group input:focus {
-            border-color: #00ff88;
-            box-shadow: 0 0 20px rgba(0,255,136,0.1);
-        }
-        
-        .input-group input::placeholder {
-            color: #666;
-        }
-        
+        .input-group input:focus { border-color: #00ff88; }
+        .input-group input::placeholder { color: #666; }
         .btn {
             padding: 15px 25px;
             border: none;
@@ -199,45 +110,12 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
-        
-        .btn-primary {
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            color: #000;
-        }
-        
-        .btn-primary:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(0,255,136,0.3);
-        }
-        
-        .btn-secondary {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        
-        .btn-gold {
-            background: linear-gradient(45deg, #ffd700, #ff8c00);
-            color: #000;
-        }
-        
-        .btn-gold:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(255,215,0,0.3);
-        }
-        
-        .btn-red {
-            background: linear-gradient(45deg, #ff4444, #cc0000);
-            color: #fff;
-        }
-        
+        .btn-primary { background: linear-gradient(45deg, #00ff88, #00ccff); color: #000; }
+        .btn-primary:hover { transform: scale(1.05); }
+        .btn-gold { background: linear-gradient(45deg, #ffd700, #ff8c00); color: #000; }
+        .btn-gold:hover { transform: scale(1.05); }
+        .btn-red { background: linear-gradient(45deg, #ff4444, #cc0000); color: #fff; }
         .button-group {
             display: flex;
             gap: 10px;
@@ -245,7 +123,6 @@
             flex-wrap: wrap;
             margin-top: 20px;
         }
-        
         .pairing-result {
             text-align: center;
             margin-top: 30px;
@@ -255,17 +132,8 @@
             border: 1px solid rgba(0,255,136,0.2);
             display: none;
         }
-        
-        .pairing-result.show {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
+        .pairing-result.show { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .pairing-code {
             font-size: 2.5rem;
             font-weight: 900;
@@ -277,13 +145,7 @@
             border-radius: 12px;
             margin: 15px 0;
             cursor: pointer;
-            user-select: all;
         }
-        
-        .pairing-code:hover {
-            background: rgba(0,0,0,0.5);
-        }
-        
         .warning-box {
             background: rgba(255,165,0,0.1);
             border: 1px solid rgba(255,165,0,0.3);
@@ -292,75 +154,9 @@
             margin-top: 20px;
             font-size: 0.9rem;
             color: #ffa500;
+            text-align: left;
         }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .feature-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s;
-        }
-        
-        .feature-card:hover {
-            background: rgba(255,255,255,0.08);
-            transform: translateY(-3px);
-        }
-        
-        .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 15px;
-        }
-        
-        .feature-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .feature-desc {
-            color: #888;
-            font-size: 0.85rem;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 40px 0;
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        .footer a {
-            color: #00ff88;
-            text-decoration: none;
-        }
-        
-        /* Loading Spinner */
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(0,255,136,0.3);
-            border-top: 3px solid #00ff88;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Copy toast */
+        .warning-box ol { margin-left: 20px; margin-top: 8px; }
         .toast {
             position: fixed;
             bottom: 30px;
@@ -370,17 +166,48 @@
             color: #fff;
             padding: 15px 30px;
             border-radius: 10px;
-            font-size: 0.9rem;
             display: none;
             z-index: 1000;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
         }
-        
-        .toast.show {
-            display: block;
-            animation: fadeIn 0.3s ease;
+        .toast.show { display: block; }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,255,136,0.3);
+            border-top: 3px solid #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+            margin-right: 10px;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        .feature-icon { font-size: 2rem; margin-bottom: 15px; }
+        .feature-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+        .feature-desc { color: #888; font-size: 0.85rem; }
+        .footer { text-align: center; padding: 40px 0; color: #666; }
+        .footer a { color: #00ff88; text-decoration: none; }
+        .faq-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .faq-q { font-weight: 600; color: #00ff88; margin-bottom: 5px; }
+        .faq-a { color: #ccc; }
     </style>
 </head>
 <body>
@@ -397,14 +224,10 @@
                     <span class="server-name"><i class="fas fa-server"></i> Server 4</span>
                     <span class="server-status status-online"><i class="fas fa-circle"></i> ONLINE</span>
                 </div>
-                <div class="server-header" style="margin-top: -10px;">
-                    <span style="font-size:0.85rem; color:#888;"><i class="fas fa-sync-alt"></i> REFRESH</span>
-                    <span style="font-size:0.85rem; color:#00ff88;"><i class="fas fa-shield-alt"></i> ENCRYPTED</span>
-                </div>
                 <div class="server-stats">
                     <div class="stat-item">
                         <div class="stat-label">SYSTEM</div>
-                        <div class="stat-value green">ONLINE</div>
+                        <div class="stat-value green" id="systemStatus">ONLINE</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">ACTIVE USERS</div>
@@ -425,10 +248,6 @@
                 <div class="server-header">
                     <span class="server-name"><i class="fas fa-server"></i> Server 5</span>
                     <span class="server-status status-maintenance"><i class="fas fa-tools"></i> BOOTING</span>
-                </div>
-                <div class="server-header" style="margin-top: -10px;">
-                    <span style="font-size:0.85rem; color:#888;"><i class="fas fa-sync-alt"></i> REFRESH</span>
-                    <span style="font-size:0.85rem; color:#00ccff;"><i class="fas fa-shield-alt"></i> ENCRYPTED</span>
                 </div>
                 <div class="server-stats">
                     <div class="stat-item">
@@ -452,9 +271,7 @@
         </div>
         
         <div class="pairing-section">
-            <div class="pairing-title">
-                <i class="fas fa-link"></i> WhatsApp Pairing Code
-            </div>
+            <div class="pairing-title"><i class="fas fa-link"></i> WhatsApp Pairing Code</div>
             
             <div class="input-group">
                 <input type="text" id="phoneNumber" placeholder="ENTER NUMBER (e.g., 919337948764)" maxlength="15">
@@ -483,31 +300,35 @@
                     <i class="fas fa-copy"></i> CLICK TO COPY
                 </div>
                 <div class="warning-box">
-                    <i class="fas fa-exclamation-triangle"></i> 
-                    ⚠️ Open WhatsApp → Linked Devices → Link Device → Enter this code
+                    <strong>📱 How to use this code:</strong>
+                    <ol>
+                        <li>Open WhatsApp on your phone</li>
+                        <li>Tap 3 dots (⋮) → <b>Linked Devices</b></li>
+                        <li>Tap <b>"Link a Device"</b></li>
+                        <li>Tap <b>"Link with phone number instead"</b></li>
+                        <li>Enter the code <b>WITHOUT dashes</b> (e.g., LTCHK5RN)</li>
+                    </ol>
                 </div>
             </div>
         </div>
         
-        <h2 style="text-align:center; margin: 40px 0 20px;">
-            <i class="fas fa-star"></i> 1000+ Powerful Commands
-        </h2>
+        <h2 style="text-align:center; margin: 40px 0 20px;">⚡ 1000+ Powerful Commands</h2>
         
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">🤖</div>
                 <div class="feature-title">AI Chatbots</div>
-                <div class="feature-desc">Gemini, Meta AI, ChatGPT, Claude, Bard, Copilot</div>
+                <div class="feature-desc">Gemini, Meta AI, ChatGPT, Claude, Bard</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">📥</div>
                 <div class="feature-title">Media Downloader</div>
-                <div class="feature-desc">YouTube, TikTok, Instagram, Facebook, Twitter HD</div>
+                <div class="feature-desc">YouTube, TikTok, Instagram, Facebook HD</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🎵</div>
                 <div class="feature-title">Music & Video</div>
-                <div class="feature-desc">Download songs, videos in 144p to 2160p quality</div>
+                <div class="feature-desc">144p to 2160p quality downloads</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🎨</div>
@@ -517,165 +338,159 @@
             <div class="feature-card">
                 <div class="feature-icon">🔍</div>
                 <div class="feature-title">Search Tools</div>
-                <div class="feature-desc">Google, Image, YouTube, Wikipedia, News search</div>
+                <div class="feature-desc">Google, Image, YouTube, Wikipedia</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🛠️</div>
                 <div class="feature-title">Admin Tools</div>
-                <div class="feature-desc">Group manage, Anti-link, Welcome, Kick, Promote</div>
+                <div class="feature-desc">Group manage, Anti-link, Welcome, Kick</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🎮</div>
                 <div class="feature-title">Fun Games</div>
-                <div class="feature-desc">Memes, Jokes, Quotes, Trivia, Riddles, Dice</div>
+                <div class="feature-desc">Memes, Jokes, Quotes, Trivia, Riddles</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🌍</div>
                 <div class="feature-title">Global Tools</div>
-                <div class="feature-desc">Translate, Weather, QR Code, Calculator, IP lookup</div>
+                <div class="feature-desc">Translate, Weather, QR, Calculator</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">📖</div>
                 <div class="feature-title">Islamic Tools</div>
-                <div class="feature-desc">Quran, Hadith, Prayer times, Tafsir</div>
+                <div class="feature-desc">Quran, Hadith, Prayer times</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🎌</div>
                 <div class="feature-title">Anime Zone</div>
-                <div class="feature-desc">Waifu, Neko, Anime quotes, Manga search</div>
+                <div class="feature-desc">Waifu, Neko, Anime quotes</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">⚡</div>
                 <div class="feature-title">Speed & Info</div>
-                <div class="feature-desc">Bot speed, Ping, System info, Uptime stats</div>
+                <div class="feature-desc">Bot speed, Ping, System info</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🔐</div>
                 <div class="feature-title">Convert Tools</div>
-                <div class="feature-desc">PDF, MP3, Image converter, Base64 encode/decode</div>
+                <div class="feature-desc">PDF, MP3, Image converter</div>
             </div>
         </div>
         
-        <!-- FAQ Section -->
         <div class="pairing-section" style="margin-top: 40px;">
-            <div class="pairing-title">
-                <i class="fas fa-question-circle"></i> FAQ
+            <div class="pairing-title"><i class="fas fa-question-circle"></i> FAQ</div>
+            <div class="faq-item">
+                <div class="faq-q">Q: Fake numbers pe chalega?</div>
+                <div class="faq-a">A: Haan! Fake number + real number dono pe chalega. Bas linked device karna hoga WhatsApp me.</div>
             </div>
-            
-            <div style="display: grid; gap: 15px; margin-top: 20px;">
-                <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 15px;">
-                    <div style="font-weight: 600; color: #00ff88; margin-bottom: 5px;">Q: Fake numbers pe chalega?</div>
-                    <div style="color: #ccc;">A: Haan! Fake number + real number dono pe chalega. Bas linked device karna hoga WhatsApp me.</div>
-                </div>
-                <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 15px;">
-                    <div style="font-weight: 600; color: #00ff88; margin-bottom: 5px;">Q: Koi OTP/code verify karna hoga?</div>
-                    <div style="color: #ccc;">A: Nahi. Direct pairing code se link hota hai. Koi OTP nahi.</div>
-                </div>
-                <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 15px;">
-                    <div style="font-weight: 600; color: #00ff88; margin-bottom: 5px;">Q: 24/7 chalega free?</div>
-                    <div style="color: #ccc;">A: Haan! Render.com free plan 24/7 chalata hai. Bas thoda idle hota hai (cron-job se 14 min me ping karo).</div>
-                </div>
-                <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 15px;">
-                    <div style="font-weight: 600; color: #00ff88; margin-bottom: 5px;">Q: Mobile se deploy ho sakta hai?</div>
-                    <div style="color: #ccc;">A: Haan! Pura process mobile browser se ho sakta hai. Koi PC nahi chahiye.</div>
-                </div>
-                <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 15px;">
-                    <div style="font-weight: 600; color: #00ff88; margin-bottom: 5px;">Q: Termux chahiye?</div>
-                    <div style="color: #ccc;">A: Nahi! Sirf browser se kaam hoga</div>
-                </div>
+            <div class="faq-item">
+                <div class="faq-q">Q: Koi OTP/code verify karna hoga?</div>
+                <div class="faq-a">A: Nahi. Direct pairing code se link hota hai. Koi OTP nahi.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Q: 24/7 chalega free?</div>
+                <div class="faq-a">A: Haan! Render.com free plan 24/7 chalata hai. Bas thoda idle hota hai (cron-job se 14 min me ping karo).</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Q: Mobile se deploy ho sakta hai?</div>
+                <div class="faq-a">A: Haan! Pura process mobile browser se ho sakta hai. Koi PC nahi chahiye.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Q: Termux chahiye?</div>
+                <div class="faq-a">A: Nahi! Sirf browser se kaam hoga</div>
             </div>
         </div>
         
         <div class="footer">
             <p>⚡ KRISHU WP BOT v4.0 | 1000+ Commands | Free 24/7 Hosting</p>
-            <p style="margin-top: 5px;">Made with ❤️ by Krishu | <a href="#">GitHub</a> | <a href="#">Render</a></p>
+            <p>Made with ❤️ by Krishu</p>
         </div>
     </div>
     
     <div class="toast" id="toast"></div>
     
     <script>
-        // Paste from clipboard
+        // Fetch real status from server
+        fetch('/api/status')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('activeUsers').textContent = data.activeUsers + ' ONLINE';
+            })
+            .catch(e => console.log('Status fetch failed'));
+        
         function pasteNumber() {
-            navigator.clipboard.readText().then(text => {
-                const clean = text.replace(/[^0-9]/g, '');
-                document.getElementById('phoneNumber').value = clean;
-            }).catch(() => {
-                // Fallback
-                document.getElementById('phoneNumber').focus();
-                document.execCommand('paste');
-            });
+            const input = document.getElementById('phoneNumber');
+            if (navigator.clipboard) {
+                navigator.clipboard.readText().then(text => {
+                    input.value = text.replace(/[^0-9]/g, '');
+                });
+            } else {
+                input.focus();
+            }
         }
         
-        // Generate pairing code
-        function generatePairCode(type) {
+        async function generatePairCode(type) {
             const number = document.getElementById('phoneNumber').value.replace(/[^0-9]/g, '');
-            
-            if (!number || number.length < 10) {
-                showToast('❌ Please enter a valid phone number');
-                return;
-            }
-            
             const resultDiv = document.getElementById('pairingResult');
             const codeDiv = document.getElementById('pairingCode');
             
-            // Show loading
-            resultDiv.classList.add('show');
-            codeDiv.innerHTML = '<span class="spinner"></span> Generating...';
+            if (!number || number.length < 10) {
+                showToast('❌ Please enter a valid phone number with country code');
+                return;
+            }
             
-            // Generate random code
-            setTimeout(() => {
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                let code = '';
-                for (let i = 0; i < 8; i++) {
-                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+            resultDiv.classList.add('show');
+            codeDiv.innerHTML = '<span class="spinner"></span> Connecting to WhatsApp...';
+            
+            try {
+                const response = await fetch('/api/pair', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ number: number })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    codeDiv.textContent = data.pairingCode;
+                    showToast(`✅ Real pairing code generated for ${number}!`);
+                    
+                    // Auto-copy to clipboard
+                    navigator.clipboard.writeText(data.pairingCode.replace('-', '')).catch(() => {});
+                } else {
+                    codeDiv.textContent = 'ERROR';
+                    showToast('❌ ' + (data.error || 'Failed to generate code'));
                 }
-                const formattedCode = code.match(/.{1,4}/g).join('-');
-                codeDiv.textContent = formattedCode;
-                
-                let msg = `✅ Pairing Code for ${number}`;
-                if (type === 'force') msg = '⚠️ FORCE MODE - New session created';
-                if (type === 'new') msg = '🆕 New Pairing Code Generated';
-                
-                showToast(msg);
-            }, 1500);
+            } catch (error) {
+                codeDiv.textContent = 'ERROR';
+                showToast('❌ Server error: ' + error.message);
+            }
         }
         
-        // Copy code to clipboard
         function copyCode() {
             const code = document.getElementById('pairingCode').textContent;
-            if (code && !code.includes('Generating')) {
-                navigator.clipboard.writeText(code.replace('-', '')).then(() => {
-                    showToast('📋 Code copied to clipboard!');
+            if (code && !code.includes('ERROR') && !code.includes('Connecting')) {
+                const cleanCode = code.replace('-', '');
+                navigator.clipboard.writeText(cleanCode).then(() => {
+                    showToast('📋 Code copied: ' + cleanCode);
                 }).catch(() => {
-                    // Fallback
                     const textarea = document.createElement('textarea');
-                    textarea.value = code.replace('-', '');
+                    textarea.value = cleanCode;
                     document.body.appendChild(textarea);
                     textarea.select();
                     document.execCommand('copy');
                     document.body.removeChild(textarea);
-                    showToast('📋 Code copied!');
+                    showToast('📋 Code copied: ' + cleanCode);
                 });
             }
         }
         
-        // Toast notification
-        function showToast(message) {
+        function showToast(msg) {
             const toast = document.getElementById('toast');
-            toast.textContent = message;
+            toast.textContent = msg;
             toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            setTimeout(() => toast.classList.remove('show'), 4000);
         }
-        
-        // Auto-refresh users count
-        setInterval(() => {
-            const users = document.getElementById('activeUsers');
-            const count = Math.floor(Math.random() * 8) + 3;
-            users.textContent = count + ' ONLINE';
-        }, 10000);
     </script>
 </body>
-  </html>
+                        </html>
